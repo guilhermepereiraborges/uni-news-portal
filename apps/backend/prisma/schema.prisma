@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  AUTHOR
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  role          UserRole  @default(AUTHOR)
+  avatarUrl     String?   @map("avatar_url")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  posts         Post[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  colorCode String?  @map("color_code")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  posts     Post[]
+
+  @@map("categories")
+}
+
+model Post {
+  id                String     @id @default(uuid())
+  title             String
+  slug              String     @unique
+  excerpt           String?    @db.Text
+  content           String     @db.Text
+  featuredImageUrl  String?    @map("featured_image_url")
+  status            PostStatus @default(DRAFT)
+  
+  isFeatured        Boolean    @default(false) @map("is_featured")
+  isBreakingNews    Boolean    @default(false) @map("is_breaking_news")
+  
+  currentViewsCount Int        @default(0) @map("current_views_count")
+  
+  publishedAt       DateTime?  @map("published_at")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  authorId          String     @map("author_id")
+  categoryId        String     @map("category_id")
+
+  author            User       @relation(fields: [authorId], references: [id])
+  category          Category   @relation(fields: [categoryId], references: [id])
+  metrics           PostMetric[]
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@map("posts")
+}
+
+model PostMetric {
+  id             String   @id @default(uuid())
+  date           DateTime @db.Date
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0) @map("unique_visitors")
+
+  postId         String   @map("post_id")
+  post           Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, date])
+  @@map("post_metrics")
+}
+
+model ActivityLog {
+  id           String   @id @default(uuid())
+  action       String
+  targetEntity String   @map("target_entity")
+  targetId     String   @map("target_id")
+  description  String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}
