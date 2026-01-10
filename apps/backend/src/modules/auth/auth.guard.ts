@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { UserRole } from 'src/generated/prisma/enums';
 import { IS_PUBLIC_KEY } from 'src/shared/decorators/isPublic';
 
 @Injectable()
@@ -33,14 +34,17 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
-        token,
-        {
-          secret: process.env.JWT_SECRET,
-        },
-      );
+      const payload = await this.jwtService.verifyAsync<{
+        sub: string;
+        role: string;
+      }>(token, {
+        secret: process.env.JWT_SECRET,
+      });
 
-      request['userId'] = payload.sub;
+      request['user'] = {
+        id: payload.sub,
+        role: payload.role as UserRole,
+      };
     } catch {
       throw new UnauthorizedException();
     }
