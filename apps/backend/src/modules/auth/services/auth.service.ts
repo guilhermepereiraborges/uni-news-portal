@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 
 export interface LoginResponse {
   accessToken: string;
+  user: UserResponseDto;
 }
 
 @Injectable()
@@ -21,15 +22,15 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
   async login(input: LoginDto): Promise<LoginResponse> {
-    const user = await this.authRepository.findByEmail(input.email);
+    const userEntity = await this.authRepository.findByEmail(input.email);
 
-    if (!user) {
+    if (!userEntity) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const isPasswordValid = await bcrypt.compare(
       input.password,
-      user.passwordHash,
+      userEntity.passwordHash,
     );
 
     if (!isPasswordValid) {
@@ -37,15 +38,15 @@ export class AuthService {
     }
 
     const payload = {
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      sub: userEntity.id,
+      email: userEntity.email,
+      name: userEntity.name,
+      role: userEntity.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
-
-    return { accessToken };
+    const user = UserResponseDto.fromEntity(userEntity);
+    return { accessToken, user };
   }
 
   async register(input: RegisterDto): Promise<UserResponseDto> {
@@ -64,5 +65,15 @@ export class AuthService {
     });
 
     return UserResponseDto.fromEntity(newUser);
+  }
+
+  async me(userId: string): Promise<UserResponseDto> {
+    const user = await this.authRepository.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuário não encontrado');
+    }
+
+    return UserResponseDto.fromEntity(user);
   }
 }
