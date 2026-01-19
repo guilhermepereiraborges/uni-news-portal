@@ -29,7 +29,7 @@ export function Footer() {
                 Receba as novidades da semana
               </h3>
               <p className="text-sm text-slate-400 mb-6">
-                Junte-se a mais de 10.000 acadêmicos. Sem spam, apenas conteúdo relevante.
+                Junte-se a outros acadêmicos. Sem spam, apenas conteúdo relevante.
               </p>
               
               <form className="flex flex-col sm:flex-row gap-3">
