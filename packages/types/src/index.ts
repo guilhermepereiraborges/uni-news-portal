@@ -43,6 +43,53 @@ export const LoginParamsSchema = z.object({
   password: z.string(),
 });
 
+
+export const CategorySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  colorCode: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const CreateCategoryDTOSchema = z.object({
+  name: z.string(),
+  colorCode: z.string().optional(),
+});
+
+
+export const PostWithRelationsSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  slug: z.string(),
+  excerpt: z.string().nullable(),
+  content: z.string(),
+  featuredImageUrl: z.string().nullable(),
+  status: PostStatusSchema,
+  isFeatured: z.boolean(),
+  isBreakingNews: z.boolean(),
+  currentViewsCount: z.number().int().nonnegative(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  publishedAt: z.date().nullable(),
+  authorId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+  author: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    email: z.string(),
+    avatarUrl: z.string().nullable(),
+  }),
+  category: CategorySchema,
+});
+
+export type PostWithRelations = z.infer<typeof PostWithRelationsSchema>;
+export type PostStatus = z.infer<typeof PostStatusSchema>;
+export type UserRole = z.infer<typeof UserRoleSchema>;
+
+
+export type Category = z.infer<typeof CategorySchema>;
+export type CreateCategoryDTO = z.infer<typeof CreateCategoryDTOSchema>;
 export type LoginParams = z.infer<typeof LoginParamsSchema>;
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type User = z.infer<typeof UserSchema>;
